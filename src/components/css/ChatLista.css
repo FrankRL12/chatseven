@@ -1,0 +1,60 @@
+/* ChatLista.css */
+
+.lista-de-chat {
+  padding: 10px;
+}
+
+.contacto-whatsapp {
+  border-bottom: 1px solid #e5e5e5;
+  padding: 10px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.contacto-whatsapp:hover {
+  background-color: #f0f0f0;
+}
+
+.contacto-whatsapp .perfil-y-info {
+  display: flex;
+  align-items: center;
+}
+
+.perfil-chat {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.info-contacto {
+  flex-grow: 1;
+}
+
+.info-contacto p {
+  margin: 5px 0;
+}
+
+.info-contacto .nombre {
+  font-weight: bold;
+  color: #1a7fad;
+}
+
+.info-contacto .wa-id {
+  color: #777;
+}
+
+.messages-container {
+  margin-top: 10px;
+}
+
+.message {
+  background-color: #f0f0f0;
+  padding: 5px 10px;
+  border-radius: 10px;
+  margin-bottom: 5px;
+}
+
+.message p {
+  margin: 0;
+}

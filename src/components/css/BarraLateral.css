@@ -1,0 +1,68 @@
+.sidebar {
+    min-width: 400px;
+    width: 34%;
+    border-right: 1px solid lightgrey;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    background-color: #fafafa;
+}
+
+.perfil {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.foto-perfil {
+    width: 50px; /* Ancho de la foto de perfil */
+    height: 50px; /* Altura de la foto de perfil */
+    border-radius: 50%; /* Borde redondeado para la foto de perfil */
+    margin-right: 10px;
+    cursor: pointer;
+}
+
+.nombre {
+    flex-grow: 1; /* Para que el nombre ocupe el espacio restante */
+    font-weight: bold;
+}
+
+.cursor-pointer{
+    cursor: pointer;
+}
+
+.scrollable-content {
+    max-height: calc(100vh - 200px); /* Altura máxima menos la altura de la barra de perfil y la barra de búsqueda */
+    overflow-y: auto; /* Añade una barra de desplazamiento vertical cuando sea necesario */
+    scrollbar-width: thin; /* Ancho de la barra de desplazamiento */
+    scrollbar-color: #a3a3a3 #f1f1f1; /* Color de la barra de desplazamiento y su fondo */
+}
+
+/* Estilos específicos para WebKit (Chrome, Safari) */
+.scrollable-content::-webkit-scrollbar {
+    width: 6px; /* Ancho de la barra de desplazamiento */
+}
+
+.scrollable-content::-webkit-scrollbar-thumb {
+    background-color: #4caf50; /* Color de la parte móvil de la barra de desplazamiento */
+}
+
+.scrollable-content::-webkit-scrollbar-track {
+    background-color: #f1f1f1; /* Color de fondo de la barra de desplazamiento */
+}
+
+
+
+.chat-menu,
+.agente-menu,
+.registar-usuario-menu,
+.icono-menu,
+.usuarios-menu {
+    font-size: 20px;
+    cursor: pointer;
+    margin-right: 20px; /* Espacio entre los iconos */
+}
+.button-spacing {
+    margin-right: 10px; /* Ajusta el valor según sea necesario */
+}

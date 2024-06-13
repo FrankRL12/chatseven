@@ -1,0 +1,61 @@
+.timestamp-container {
+  text-align: center; /* Centrar la fecha y el día */
+  margin-bottom: 10px; /* Espacio entre la fecha y el mensaje */
+}
+
+.timestamp-popover {
+  display: inline-block; /* Mostrar en línea */
+  padding: 5px; /* Espaciado interno */
+  background-color: #ececec; /* Color de fondo */
+  border-radius: 5px; /* Borde redondeado */
+  font-size: 0.8em; /* Tamaño de fuente más pequeño */
+  color: #666; /* Color del texto */
+}
+
+.chat-message-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 10px;
+  padding: 10px; /* Reduce el padding */
+}
+
+.chat-message {
+  display: flex;
+  margin: 15px 30px 15px 30px;
+  flex-direction: column;
+  position: relative;
+  width: fit-content;
+  max-width: 400px;
+  padding: 10px;
+  background-color: #dcf8c6;
+  border-radius: 10px;
+  height: fit-content;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  word-wrap: break-word;
+}
+
+.chat-message-content {
+  max-width: 100%;
+  word-wrap: break-word;
+}
+
+/* Estilos para mensajes propios */
+.own-message {
+  align-items: flex-end;
+}
+
+.own-message .chat-message {
+  background-color: #d9fac0; /* Fondo verde claro */
+}
+
+/* Estilos para mensajes de otros contactos */
+.other-message .chat-message {
+  background-color: #EAEAEA; /* Fondo gris claro */
+}
+
+.chat-message-timestamp {
+  font-size: 0.8em; /* Tamaño de fuente más pequeño */
+  margin-left: 5px; /* Margen izquierdo para separarlo del mensaje */
+  color: #666; /* Color de la hora */
+}

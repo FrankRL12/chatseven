@@ -1,0 +1,102 @@
+/* Login.css */
+
+.login {
+    display: flex;
+    justify-content: center; /* Centrar horizontalmente */
+    align-items: center; /* Centrar verticalmente */
+    height: 100vh;
+    background-color: rgb(240, 240, 240);
+    position: relative;
+    z-index: 100;
+    overflow: hidden;
+}
+
+.login::before {
+    width: 100vw;
+    height: 222px;
+    background-color: #4ec0a5;
+    position: absolute;
+    top: 0;
+    content: "";
+}
+
+.login-container {
+    background-color: #fff;
+    max-width: 500px; /* Ancho máximo ajustado */
+    width: 80%; /* Ajuste porcentual para responsividad */
+    margin: auto;
+    padding: 40px; /* Aumento del padding */
+    border-radius: 8px;
+    box-shadow: 0 17px 50px 0 rgba(0, 0, 0, 0.19), 0 12px 15px 0 rgba(0, 0, 0, 0.24);
+    z-index: 100;
+}
+
+.login-logo img {
+    width: 150px; /* Ajuste del tamaño del logo según sea necesario */
+    height: auto;
+    display: block;
+    margin: 0 auto 20px; /* Centrar la imagen y dar margen inferior */
+}
+
+.login-name {
+    font-size: 20px;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.input-container {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.input-icon {
+    position: absolute;
+    top: 50%;
+    left: 10px;
+    transform: translateY(-50%);
+    color: #666;
+}
+
+input[type='text'],
+input[type='password'] {
+    padding: 10px 40px 10px 30px; /* Ajuste del padding según sea necesario */
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 15px;
+    padding-left: 40px; /* Dejar espacio para el icono */
+}
+
+.password-toggle {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    color: #666;
+    cursor: pointer;
+}
+
+.login-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 50px;
+    width: 100%;
+    border: none;
+    outline: none;
+    background-color: #00755a;
+    color: #fff;
+    font-size: 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 20px;
+}
+
+.login-btn:hover {
+    background-color: #005541;
+}
+
+.login-btn-icon {
+    margin-right: 10px;
+}

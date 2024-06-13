@@ -1,0 +1,43 @@
+.navegacion {
+    background-color: #0d6efd; /* Color de fondo de la barra de navegación */
+    padding: 20px; /* Espacio de relleno dentro de la barra de navegación */
+}
+
+.navegacion ul {
+    margin: 0;
+    padding: 0;
+}
+
+.navegacion ul li {
+    list-style: none;
+    margin-bottom: 10px; /* Espacio entre cada elemento de la lista */
+}
+
+.navegacion ul li a {
+    color: #fff; /* Color del texto de los enlaces */
+    text-decoration: none; /* Quitamos subrayado de los enlaces */
+    display: flex; /* Para alinear ícono y texto horizontalmente */
+    align-items: center; /* Centramos verticalmente los íconos y el texto */
+}
+
+.navegacion ul li a span {
+    margin-left: 10px; /* Espacio entre el ícono y el texto */
+}
+
+/* Estilo para la burbuja */
+a::before {
+    content: attr(title);
+    position: absolute;
+    background-color: #0037af;
+    color: #fff;
+    padding: 5px;
+    border-radius: 5px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 999; /* Asegura que la burbuja esté por encima de otros elementos */
+}
+
+  /* Mostrar la burbuja al pasar el cursor */
+a:hover::before {
+    opacity: 1;
+}

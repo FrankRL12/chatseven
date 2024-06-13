@@ -1,0 +1,10 @@
+.whatsapp-loader-container {
+  background-color: #f5f5f5; /* Color de fondo similar al de WhatsApp */
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra similar a la de WhatsApp */
+}
+
+.whatsapp-loader-image {
+  width: 100px; /* Ajusta el tamaño de la imagen según sea necesario */
+}

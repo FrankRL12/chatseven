@@ -1,0 +1,48 @@
+/* ModalContactar.css */
+
+.input-group {
+  display: flex;
+  align-items: center;
+}
+
+.flag {
+  font-size: 1.5em;
+  margin-right: 10px;
+}
+
+.flag-mexico {
+  color: green;
+}
+
+.modal {
+  font-family: Arial, sans-serif;
+}
+
+.modal-title {
+  font-weight: bold;
+}
+
+.modal-body input,
+.modal-body textarea {
+  width: 100%;
+}
+
+.modal-body label {
+  font-weight: bold;
+}
+
+.modal-footer {
+  justify-content: space-between;
+}
+
+.modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.input-group .form-control {
+  flex: 1;
+}
+
+.input-group-append {
+  margin-left: 5px;
+}

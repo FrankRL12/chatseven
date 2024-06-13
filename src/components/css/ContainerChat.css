@@ -1,0 +1,133 @@
+.chat-container {
+  min-width: 348px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-container-header {
+  display: flex;
+  align-items: center;
+  height: 50px;
+  padding: 5px 0px 5px 10px;
+  background-color: #ededed;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.chat-user-info {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  text-transform: capitalize;
+  cursor: pointer;
+}
+
+.chat-user-img {
+  width: 44px;
+  margin-right: 15px;
+  margin-left: 10px;
+}
+
+.chat-user-img > img {
+  width: 100%;
+  border-radius: 100%;
+}
+
+.chat-container-header-btn {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  cursor: pointer;
+}
+
+.chat-container-header-btn > *:first-child {
+  margin-right: 10px; /* Margen a la derecha del primer icono */
+}
+
+
+.chat-display-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: scroll; /* Cambiado de 'scroll' a 'auto' para que la barra de desplazamiento aparezca solo cuando sea necesario */
+  background-color: #ece5dd;
+  scrollbar-width: thin; /* Ancho de la barra de desplazamiento */
+  scrollbar-color: #a3a3a3 #f1f1f1; /* Color de la barra de desplazamiento y su fondo */
+}
+
+/* Estilos específicos para WebKit (Chrome, Safari) */
+.chat-display-container::-webkit-scrollbar {
+  width: 6px; /* Ancho de la barra de desplazamiento */
+}
+
+.chat-display-container::-webkit-scrollbar-thumb {
+  background-color: #4caf50; /* Color de la parte móvil de la barra de desplazamiento */
+}
+
+.chat-display-container::-webkit-scrollbar-track {
+  background-color: #f1f1f1; /* Color de fondo de la barra de desplazamiento */
+}
+
+
+.chat-input {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  background-color: #f0f0f0;
+  position: relative;
+}
+
+.chat-input-btn {
+  margin-right: 13px;
+  margin-left: 13px;
+  cursor: pointer;
+}
+
+.chat-input-btn > .MuiSvgIcon-root {
+  font-size: 26px;
+  color: gray;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+.chat-input > form {
+  flex: 1;
+}
+
+.chat-input > form > input {
+  height: 35px;
+  border-radius: 15px;
+  border: none;
+  outline: none;
+  padding-left: 10px;
+  width: 90%;
+  margin-right: 10px;
+}
+
+.chat-input-send-btn {
+  background-color: #128c7e;
+  width: 35px;
+  height: 35px;
+  border-radius: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+}
+
+.chat-input-send-btn > .MuiSvgIcon-root {
+  font-size: 22px;
+}
+
+
+.emoji-picker-container {
+  position: absolute !important;
+  top: 80px;
+  z-index: 600; /* Asegúrate de que esté por encima de otros elementos */
+}
+
+
+/* ContainerChat.css */
+
