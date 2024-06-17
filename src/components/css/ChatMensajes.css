@@ -20,6 +20,7 @@
   padding: 10px; /* Reduce el padding */
 }
 
+
 .chat-message {
   display: flex;
   margin: 15px 30px 15px 30px;
@@ -58,4 +59,25 @@
   font-size: 0.8em; /* Tamaño de fuente más pequeño */
   margin-left: 5px; /* Margen izquierdo para separarlo del mensaje */
   color: #666; /* Color de la hora */
+}
+
+
+.received-message {
+  background-color: #EAEAEA; /* Fondo gris claro para mensajes recibidos */
+  align-self: flex-start; /* Alinear a la izquierda */
+}
+
+.sent-message {
+  background-color: #d9fac0; /* Fondo verde claro para mensajes enviados */
+  align-self: flex-end; /* Alinear a la derecha */
+}
+
+.message-content {
+  flex: 1; /* Ocupar todo el espacio disponible */
+}
+
+.message-timestamp {
+  margin-left: 10px;
+  font-size: 0.8em;
+  color: #666;
 }

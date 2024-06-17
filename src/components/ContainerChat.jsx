@@ -26,6 +26,9 @@ const ContainerChat = ({ phoneNumber }) => {
   const [showModal, setShowModal] = useState(false);
   const [archivos, setArchivos] = useState([]);
   const { register, handleSubmit, formState: { errors }, reset } = useForm();
+  const [mensajesRecibidos, setMensajesRecibidos] = useState([]);
+
+  const [mensajesUnidos, setMensajesUnidos] = useState([]);
 
   const handleModalOpen = () => {
     setShowModal(true);
@@ -51,45 +54,31 @@ const ContainerChat = ({ phoneNumber }) => {
 
   //Peticion para mostar los mensajes guardado en la base de dato 
 
-
   useEffect(() => {
-    async function cargarMensajes() {
+    const fetchMensajes = async () => {
         try {
-            // Obtener todos los mensajes
-            const res = await todosMensajes();
-            console.log("Datos obtenidos de la API:", res.data);
-
-            // Filtrar los mensajes por 'wa_id' en el JSON
-            const mensajesFiltrados = res.data.filter(mensaje => {
-                const json = JSON.parse(mensaje.json);
-                const contactos = json.contacts;
-                // Verificar si hay contactos en el JSON
-                if (contactos && contactos.length > 0) {
-                    // Recorrer los contactos y comparar con wa_id
-                    for (let i = 0; i < contactos.length; i++) {
-                        if (contactos[i].wa_id === wa_id) {
-                            // Si coincide el wa_id, devolver verdadero
-                            return true;
-                        }
-                    }
-                }
-                // Si no se encontró el wa_id en ninguno de los contactos, devolver falso
-                return false;
+            const response = await todosMensajes();
+            const mensajesOrdenados = response.data.sort((a, b) => {
+                // Ordena los mensajes por fecharegistro en orden ascendente
+                return new Date(a.fecharegistro) - new Date(b.fecharegistro);
             });
 
-            // Actualizar el estado con los mensajes filtrados
-            setMensajesEnviados(mensajesFiltrados);
+            // Filtra los mensajes por wa_id y ordena por estado y timestamp
+            const mensajesFiltrados = mensajesOrdenados.filter(mensaje => {
+                const json_data = JSON.parse(mensaje.json);
+                const mensaje_wa_id = json_data.from || (json_data.contacts && json_data.contacts[0].wa_id);
+                return mensaje_wa_id === wa_id;
+            });
+            console.log('Mensajes filtrados:', mensajesFiltrados);
+
+            setMensajesUnidos(mensajesFiltrados);
         } catch (error) {
-            console.error('Error cargando mensajes:', error);
+            console.error('Error al obtener mensajes:', error);
         }
-    }
+    };
 
-    // Cargar los mensajes al montar el componente
-    cargarMensajes();
-}, [wa_id]); // Vuelve a cargar los mensajes cuando cambia wa_id
-
-
-  //fin del codigo 
+    fetchMensajes();
+}, [wa_id]);
 
 
 
@@ -138,6 +127,7 @@ const ContainerChat = ({ phoneNumber }) => {
         json: JSON.stringify(response.data),
         tipoMensaje: tipoMensaje,
         waid: wa_id,
+        estado: 'enviado',
       };
       console.log("Datos de mensaje a enviar:", mensajeData);
       await guardarMensaje(mensajeData);
@@ -193,6 +183,8 @@ const ContainerChat = ({ phoneNumber }) => {
             }
           });
 
+          mensajesUsuario.sort((a, b) => a.timestamp - b.timestamp);
+
           setMensajesUsuario(mensajesUsuario);
         } else {
           console.error(
@@ -201,6 +193,7 @@ const ContainerChat = ({ phoneNumber }) => {
         }
       })
       .catch((error) => console.error("Error al obtener los datos:", error));
+      
   }, [wa_id]);
 
   //fin del codigo
@@ -220,7 +213,6 @@ const ContainerChat = ({ phoneNumber }) => {
     }
   }, [mensajes]);
 
-  
 
   return (
     <div className="chat-container">
@@ -248,48 +240,9 @@ const ContainerChat = ({ phoneNumber }) => {
 
       {/* Agrega la referencia al contenedor de mensajes */}
       <div className="chat-display-container" ref={chatDisplayRef}>
-      {mensajesUsuario.map((mensaje, index) => (
-  <ChatMensajes
-    key={index}
-    timestamp={mensaje.timestamp}
-    mensaje={
-      mensaje.text ? (
-        mensaje.text.body
-      ) : mensaje.document ? (
-        <a
-          href={mensaje.archivos}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          {mensaje.document.filename}
-        </a>
-      ) : mensaje.image ? (
-        <img
-          src={mensaje.archivos}
-          alt="Imagen"
-          style={{ maxWidth: "100%" }}
-        />
-      ) : mensaje.video ? (
-        <video controls style={{ maxWidth: "100%" }}>
-          <source src={mensaje.archivos} type="video/mp4" />
-          Tu navegador no soporta la reproducción de videos.
-        </video>
-      ) : mensaje.sticker ? (
-        <img
-          src={mensaje.archivos}
-          alt="Sticker"
-          style={{ maxWidth: "100%" }}
-        />
-      ) : (
-        "Mensaje vacío"
-      )
-    }
-  />
-))}
-
-        {mensajesEnviados.map((mensaje, index) => (
-          <ChatMensajes key={mensaje.id} mensaje={mensaje.textomensaje} fecharegistro={mensaje.fecharegistro} enviado={true} />
-        ))}
+      {mensajesUnidos.map((mensaje) => (
+                <ChatMensajes  key={mensaje.id} mensaje={mensaje} enviado={mensaje.estado === 'enviado'}/>
+            ))}
         
         <div></div>
       </div>
