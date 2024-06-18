@@ -107,9 +107,9 @@ class MultimediaDataAPIView(APIView):
 
         params = {
             'dateFrom': '2024-05-01',
-            'dateTo': '2024-06-05',
+            'dateTo': '2024-06-17',
             'from': 0,
-            'size': 2800
+            'size': 3300
         }
 
         
@@ -170,7 +170,7 @@ class MultimediaDataAPIView(APIView):
                 extension = mime_type.split('/')[-1] if mime_type else 'unknown'
                 
                 # Nombre del archivo: archivo_multimedia_id.extension
-                filename = f"archivo_{multimedia_id}.{extension}"
+                filename = f"{multimedia_id}.{extension}"
                 
                 # Guardar los datos binarios en un archivo local
                 file_path = default_storage.save(filename, ContentFile(response.content))

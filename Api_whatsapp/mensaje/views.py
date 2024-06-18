@@ -62,6 +62,7 @@ class MensajeViewset(viewsets.ModelViewSet):
         intercalados = sorted(messages, key=lambda x: x['mensaje_formateado']['timestamp'])
         return intercalados
 
+
 class WhatsAppWebhookAPIView(APIView):
     def fetch_data(self):
         while True:
@@ -69,9 +70,9 @@ class WhatsAppWebhookAPIView(APIView):
                 url = 'https://seven-brains.com/api/whatsapp-integration-service/client-api/v1/webhook/event'
                 params = {
                     'dateFrom': '2024-05-01',
-                    'dateTo': '2024-06-15',
+                    'dateTo': '2024-06-17',
                     'from': 0,
-                    'size': 3200
+                    'size': 3300
                 }
 
                 response = requests.get(url, params=params)
