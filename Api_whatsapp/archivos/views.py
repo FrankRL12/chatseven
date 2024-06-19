@@ -107,7 +107,7 @@ class MultimediaDataAPIView(APIView):
 
         params = {
             'dateFrom': '2024-05-01',
-            'dateTo': '2024-06-17',
+            'dateTo': '2024-06-19',
             'from': 0,
             'size': 3300
         }
