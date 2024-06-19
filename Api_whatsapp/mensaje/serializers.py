@@ -91,7 +91,7 @@ class MensajeSerializer(serializers.ModelSerializer):
                     'error': str(e),
                     'estado': 'enviado'
                 }
-
+    
         else:
             # Para mensajes con estado 'otro', simplemente mostrar el mensaje y la fecha
             formatted_message = {

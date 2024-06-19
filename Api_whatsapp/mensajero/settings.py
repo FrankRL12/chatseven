@@ -24,10 +24,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 
 SECRET_KEY = config('SECRET_KEY')
-WEBHOOK_BASE_URL= config('WEBHOOK_BASE_URL')
-TOKEN_ACESSO_FACEBOOK= config('TOKEN_ACESSO_FACEBOOK')
-FACEBOOK_API_BASE_URL=config('FACEBOOK_API_BASE_URL')
-ENVIO_FACEBOOK_URL=config('ENVIO_FACEBOOK_URL')
+WEBHOOK_BASE_URL = config('WEBHOOK_BASE_URL')
+TOKEN_ACESSO_FACEBOOK = config('TOKEN_ACESSO_FACEBOOK')
+FACEBOOK_API_BASE_URL = config('FACEBOOK_API_BASE_URL')
+ENVIO_FACEBOOK_URL = config('ENVIO_FACEBOOK_URL')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -86,10 +86,6 @@ TEMPLATES = [
 WSGI_APPLICATION = 'mensajero.wsgi.application'
 
 
-
-
-
-
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
@@ -98,7 +94,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'mensajeroDB',
         'USER': 'userMensajero',
-        'PASSWORD': '1234567',
+        'PASSWORD': '680912',
         'HOST': 'localhost',
         'PORT': 5432,
     }
@@ -128,10 +124,10 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
-LANGUAGE_CODE = 'es-MX'  
-TIME_ZONE = 'America/Mexico_City'  
-USE_I18N = True  
-USE_L10N = True 
+LANGUAGE_CODE = 'es-MX'
+TIME_ZONE = 'America/Mexico_City'
+USE_I18N = True
+USE_L10N = True
 
 
 # Static files (CSS, JavaScript, Images)
@@ -141,7 +137,7 @@ STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR /'media'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
