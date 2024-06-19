@@ -94,7 +94,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'mensajeroDB',
         'USER': 'userMensajero',
-        'PASSWORD': '680912',
+        'PASSWORD': '1234567',
         'HOST': 'localhost',
         'PORT': 5432,
     }
@@ -124,18 +124,11 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
-<<<<<<< HEAD
 LANGUAGE_CODE = 'es-MX'  
 TIME_ZONE = 'America/Mexico_City'  
 USE_I18N = True  
 USE_L10N = True 
 USE_TZ = True
-=======
-LANGUAGE_CODE = 'es-MX'
-TIME_ZONE = 'America/Mexico_City'
-USE_I18N = True
-USE_L10N = True
->>>>>>> c0685cbac09d00a786a505ed83487bc46e759f42
 
 
 # Static files (CSS, JavaScript, Images)
