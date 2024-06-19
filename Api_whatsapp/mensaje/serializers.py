@@ -98,7 +98,7 @@ class MensajeSerializer(serializers.ModelSerializer):
                     'error': str(e),
                     'estado': 'enviado'
                 }
-
+    
         else:
             local_time = obj.fecharegistro.astimezone(local_tz)
             formatted_message = {

@@ -1,18 +1,30 @@
 import { useEffect, useState } from 'react';
 import * as FaIcons from "react-icons/fa";
 import './css/ChatMensajes.css';
+import moment from 'moment-timezone';
 
 const ChatMensajes = ({ mensaje, enviado }) => {
   const { mensaje_formateado, textomensaje, wa_id, estado } = mensaje;
   const { timestamp, text, type } = mensaje_formateado;
 
   // Función para formatear la hora en formato HH:MM AM/PM
+
+
   const formatHour = (timestampString) => {
-    const date = new Date(timestampString);
-    const hours = date.getHours();
-    const minutes = date.getMinutes();
+    // Crear un objeto moment con la fecha dada y especificar que está en UTC
+    const date = moment.utc(timestampString);
+
+    // Convertir a la zona horaria de Ciudad de México
+    date.tz('America/Mexico_City');
+
+    // Obtener las horas, minutos y determinar si es AM o PM
+    const hours = date.hours();
+    const minutes = date.minutes();
     const ampm = hours >= 12 ? 'pm' : 'am';
+
+    // Formatear la hora en formato HH:MM AM/PM
     const formattedHour = `${hours % 12 || 12}:${minutes < 10 ? '0' : ''}${minutes} ${ampm}`;
+
     return formattedHour;
   };
 
@@ -63,11 +75,11 @@ const ChatMensajes = ({ mensaje, enviado }) => {
       } else if (type === 'video') {
         return (
           <div className="embed-responsive embed-responsive-16by9  rounded mx-auto d-block">
-      <video controls className="embed-responsive-item" style={{ maxHeight: '300px', width: 'auto' }}>
-        <source src={text} type="video/mp4" />
-        Your browser does not support the video tag.
-      </video>
-    </div>
+            <video controls className="embed-responsive-item" style={{ maxHeight: '300px', width: 'auto' }}>
+              <source src={text} type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          </div>
         );
       } else if (type === 'audio') {
         return (
