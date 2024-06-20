@@ -14,10 +14,13 @@ import json
 from rest_framework.views import APIView
 import threading
 import time
+import os
+from django.conf import settings
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from django.core.files.storage import FileSystemStorage
 
 # Create your views here.
-
-
 class MensajeViewset(viewsets.ModelViewSet):
     serializer_class = MensajeSerializer
 
@@ -182,5 +185,59 @@ class GuardarMensajeAPI(APIView):
                 return Response({'mensaje_id': mensaje.id}, status=status.HTTP_201_CREATED)
             else:
                 return Response({'error': 'Error al enviar el mensaje a la API de Facebook'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+#@api_view(['POST'])
+#def crear_carpeta(request):
+#    try:
+        # Ruta donde se creará la carpeta temporal
+#        carpeta_temporal = os.path.join(settings.BASE_DIR, 'temporal')
+        
+#        # Verificar si la carpeta ya existe, si no, crearla
+#        if not os.path.exists(carpeta_temporal):
+#            os.makedirs(carpeta_temporal)
+#        
+#        return Response({'mensaje': 'Carpeta temporal creada correctamente'}, status=status.HTTP_201_CREATED)
+#    
+#    except Exception as e:
+#        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET', 'POST'])
+def subir_archivo(request):
+    carpeta_temporal = os.path.join(settings.BASE_DIR, 'temporal')
+    
+    if request.method == 'POST':
+        try:
+            if not os.path.exists(carpeta_temporal):
+                os.makedirs(carpeta_temporal)
+
+            archivo = request.FILES.get('archivo')
+            if not archivo:
+                return Response({'error': 'No se ha proporcionado un archivo válido'}, status=status.HTTP_400_BAD_REQUEST)
+
+            fs = FileSystemStorage(location=carpeta_temporal)
+            filename = fs.save(archivo.name, archivo)
+
+            archivo_url = f"http://127.0.0.1:8000/temporal/{filename}"
+
+            return Response({'mensaje': 'Archivo subido correctamente', 'url': archivo_url}, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    elif request.method == 'GET':
+        try:
+            if not os.path.exists(carpeta_temporal):
+                return Response({'mensaje': 'No hay archivos en la carpeta temporal'}, status=status.HTTP_200_OK)
+
+            archivos = os.listdir(carpeta_temporal)
+            archivo_urls = [
+                f"http://127.0.0.1:8000/temporal/{archivo}" for archivo in archivos
+            ]
+
+            return Response({'archivos': archivo_urls}, status=status.HTTP_200_OK)
+
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

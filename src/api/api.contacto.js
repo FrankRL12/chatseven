@@ -17,6 +17,13 @@ const usuarioApi = axios.create({
     baseURL: "http://127.0.0.1:8000/api/api/v1/usuario/"
 })
 
+const uploadApi = axios.create({
+    baseURL: 'http://127.0.0.1:8000/api',
+    headers: {
+        'Content-Type': 'multipart/form-data', // Especifica que se enviará un archivo
+    },
+});
+
 export const todosContacto = () => contactoApi.get("/");
 
 export const peticionContacto = (id) => contactoApi.get(`/${id}/`);
@@ -39,3 +46,10 @@ export const usuarioMultiuso = (usuario) => usuarioApi.post("/", usuario);
 
 
 
+// Definir la función para subir un archivo
+export const subirArchivo = (archivo) => {
+    const formData = new FormData();
+    formData.append('archivo', archivo);
+
+    return uploadApi.post('/subir_archivo/', formData);
+};

@@ -7,7 +7,7 @@ import ChatMensajes from "./ChatMensajes";
 import EmojiPicker from "emoji-picker-react";
 import { url } from "../api/api.whatsapp";
 import axios from "axios";
-import {registarContacto, multimedia, guardarMensaje, todosMensajes} from '../api/api.contacto';
+import {registarContacto, multimedia, guardarMensaje, todosMensajes, subirArchivo} from '../api/api.contacto';
 import ModalRegistrarContacto from "./mod/ModalRegistrarContacto";
 import { toast } from "react-hot-toast";
 import { useForm } from "react-hook-form";
@@ -19,7 +19,7 @@ const ContainerChat = ({ phoneNumber }) => {
   const [nombreUsuario, setNombreUsuario] = useState("");
   const [mensajes, setMensajes] = useState("");
   const chatDisplayRef = useRef(null); // Referencia al contenedor de mensajes
-  const fileInputRef = useRef(null); // Referencia al input de tipo file
+  //const fileInputRef = useRef(null); // Referencia al input de tipo file
   const [mensajesEnviados, setMensajesEnviados] = useState([]);
   const [mediaUrls, setMediaUrls] = useState([]);
   const myBlob = useState("");
@@ -29,6 +29,7 @@ const ContainerChat = ({ phoneNumber }) => {
   const [mensajesRecibidos, setMensajesRecibidos] = useState([]);
 
   const [mensajesUnidos, setMensajesUnidos] = useState([]);
+  const fileInputRef = useRef(null);
 
   
 
@@ -40,9 +41,6 @@ const ContainerChat = ({ phoneNumber }) => {
     setShowModal(false);
   };
 
-  
-
-
   useEffect(() => {
     async function cargarArchivos() {
       const res = await multimedia();
@@ -51,9 +49,6 @@ const ContainerChat = ({ phoneNumber }) => {
     };
     cargarArchivos();
   }, []);
-
-
-
   //Peticion para mostar los mensajes guardado en la base de dato 
 
   useEffect(() => {
@@ -81,6 +76,29 @@ const ContainerChat = ({ phoneNumber }) => {
 
     fetchMensajes();
 }, [wa_id]);
+
+
+const handleFileUpload = async () => {
+  const selectedFile = fileInputRef.current.files[0];
+  if (!selectedFile) {
+      console.error('No se ha seleccionado ningún archivo');
+      return;
+  }
+
+  try {
+      const response = await subirArchivo(selectedFile);
+      if (response.status === 201) {
+          console.log('Archivo subido correctamente');
+          // Aquí puedes manejar la lógica de éxito, por ejemplo mostrar un mensaje al usuario
+      } else {
+          console.error('Error al subir el archivo');
+      }
+  } catch (error) {
+      console.error('Error en la solicitud:', error);
+  }
+};
+
+  
 
 
 
@@ -252,9 +270,9 @@ const ContainerChat = ({ phoneNumber }) => {
       <div className="chat-input">
         <div className="chat-input-btn">
           <FaIcons.FaRegGrin onClick={() => setAbrirEmojiBox(!abrirEmojiBox)} />
-          <FaIcons.FaPlus />
+          <FaIcons.FaPlus onClick={() => fileInputRef.current.click()} />
           {/* Input oculto de tipo file */}
-          <input ref={fileInputRef} type="file" style={{ display: "none" }} />
+          <input ref={fileInputRef} type="file" style={{ display: "none" }} onChange={handleFileUpload}/>
         </div>
 
         <form onSubmit={(e) => e.preventDefault()}>

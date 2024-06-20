@@ -25,4 +25,8 @@ urlpatterns = [
     path('api/', include('mensaje.urls')),
     path('api/', include('contacto.urls')),
     path('api/', include('usuario.urls')),
-]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.TEMPORAL_URL, document_root=settings.TEMPORAL_ROOT)

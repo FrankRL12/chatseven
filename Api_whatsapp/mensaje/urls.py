@@ -10,4 +10,5 @@ urlpatterns = [
     path('api/v1/', include(router.urls)),
     path('guardar-mensaje/', GuardarMensajeAPI.as_view(), name='guardar-mensaje'),
     path('webhook/', WhatsAppWebhookAPIView.as_view(), name='whatsapp-webhook'),
+    path('subir_archivo/', views.subir_archivo, name="subir_archivo"),
 ]
