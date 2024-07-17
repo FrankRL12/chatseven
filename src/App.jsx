@@ -47,40 +47,7 @@ const Loader = () => {
 
 function App() {
   const [loading, setLoading] = useState(true);
-  const [phoneNumber, setPhoneNumber] = useState("");
-
-  fetch(url)
-    .then((response) => response.json()) // Convertimos la respuesta a JSON
-    .then((data) => {
-      console.log("Data:", data); // Agrega este registro para verificar la estructura de tus datos
-      
-      // Verificamos si la propiedad "webhookEventItem" existe en el objeto data
-      if (data && data.webhookEventItem) {
-        // Iteramos sobre las entradas
-        data.webhookEventItem.forEach((entry) => {
-          console.log("Entry:", entry); // Agrega este registro para verificar la estructura de tu entrada
-          
-          // Parseamos el payload JSON de cada entrada
-          const payload = JSON.parse(entry.payload);
-          console.log("Payload:", payload); // Agrega este registro para verificar la estructura de tu payload
-          
-          // Verifica si la estructura del payload es la esperada
-          if (payload && payload.entry && payload.entry[0] && payload.entry[0].changes && payload.entry[0].changes[0] && payload.entry[0].changes[0].value && payload.entry[0].changes[0].value.metadata && payload.entry[0].changes[0].value.metadata.display_phone_number) {
-            // Accedemos al número de teléfono dentro del payload
-            const phoneNumber = payload.entry[0].changes[0].value.metadata.display_phone_number;
-            setPhoneNumber(phoneNumber);
-          } else {
-            console.error("La estructura de los datos no es la esperada");
-          }
-        });
-      } else {
-        console.error("El objeto de datos no tiene la propiedad 'webhookEventItem'");
-      }
-    })
-    .catch((error) => console.error("Error al obtener los datos:", error));
-
-
-
+  
   useEffect(() => {
     setTimeout(() => {
       setLoading(false);
@@ -94,10 +61,10 @@ function App() {
         <div>
           <Routes>
             <Route path="/" element={<Navigate to="/home" />} />
-            <Route path="/home" element={<Home phoneNumber={phoneNumber} />} />
+            <Route path="/home" element={<Home/>} />
             <Route
               path="/:wa_id"
-              element={<PaginaDeChat phoneNumber={phoneNumber} />}
+              element={<PaginaDeChat/>}
             />
             <Route path="/login" element={<Login />} />
           </Routes>

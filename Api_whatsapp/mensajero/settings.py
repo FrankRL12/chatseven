@@ -92,11 +92,14 @@ WSGI_APPLICATION = 'mensajero.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'mensajeroDB',
+        'NAME': 'DBmensaje',
         'USER': 'userMensajero',
         'PASSWORD': '1234567',
         'HOST': 'localhost',
         'PORT': 5432,
+        'OPTIONS': {
+            'options': '-c search_path=mensajero'
+        },
     }
 }
 

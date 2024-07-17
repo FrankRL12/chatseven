@@ -11,7 +11,9 @@ class MultimediaFile(models.Model):
 
 
     class Meta:
+        # Especifica el esquema donde quieres crear la tabla
         db_table = 'multimedia'
 
+        
     def __str__(self):
         return f"{self.multimedia_id}"

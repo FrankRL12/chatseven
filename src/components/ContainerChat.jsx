@@ -12,7 +12,7 @@ import ModalRegistrarContacto from "./mod/ModalRegistrarContacto";
 import { toast } from "react-hot-toast";
 import { useForm } from "react-hook-form";
 
-const ContainerChat = ({ phoneNumber }) => {
+const ContainerChat = () => {
   const [abrirEmojiBox, setAbrirEmojiBox] = useState(false);
   const { wa_id } = useParams();
   const [mensajesUsuario, setMensajesUsuario] = useState([]);
@@ -41,41 +41,40 @@ const ContainerChat = ({ phoneNumber }) => {
     setShowModal(false);
   };
 
-  useEffect(() => {
-    async function cargarArchivos() {
-      const res = await multimedia();
-      setArchivos(res.data);
-      console.log(res);
-    };
-    cargarArchivos();
-  }, []);
-  //Peticion para mostar los mensajes guardado en la base de dato 
+  
 
+  //Peticion para mostar los mensajes guardado en la base de dato 
   useEffect(() => {
     const fetchMensajes = async () => {
-        try {
-            const response = await todosMensajes();
-            const mensajesOrdenados = response.data.sort((a, b) => {
-                // Ordena los mensajes por fecharegistro en orden ascendente
-                return new Date(a.fecharegistro) - new Date(b.fecharegistro);
-            });
-
-            // Filtra los mensajes por wa_id y ordena por estado y timestamp
-            const mensajesFiltrados = mensajesOrdenados.filter(mensaje => {
-                const json_data = JSON.parse(mensaje.json);
-                const mensaje_wa_id = json_data.from || (json_data.contacts && json_data.contacts[0].wa_id);
-                return mensaje_wa_id === wa_id;
-            });
-            console.log('Mensajes filtrados:', mensajesFiltrados);
-
-            setMensajesUnidos(mensajesFiltrados);
-        } catch (error) {
-            console.error('Error al obtener mensajes:', error);
-        }
+      try {
+        const response = await todosMensajes();
+        const mensajesOrdenados = response.data.sort((a, b) => {
+          // Ordena los mensajes por fecharegistro en orden ascendente
+          return new Date(a.fecharegistro) - new Date(b.fecharegistro);
+        });
+        // Filtra los mensajes por wa_id y ordena por estado y timestamp
+        const mensajesFiltrados = mensajesOrdenados.filter((mensaje) => {
+          const json_data = JSON.parse(mensaje.json);
+          const mensaje_wa_id =
+            json_data.from ||
+            (json_data.contacts && json_data.contacts[0].wa_id);
+          return mensaje_wa_id === wa_id;
+        });
+        //console.log('Mensajes filtrados:', mensajesFiltrados);
+        setMensajesUnidos(mensajesFiltrados);
+        //guardarMensajeEnviado(mensajes, response.data.timestamp);
+      } catch (error) {
+        console.error("Error al obtener mensajes:", error);
+      }
     };
 
-    fetchMensajes();
-}, [wa_id]);
+    //fetchMensajes();
+    const interval = setInterval(fetchMensajes, 3000); // Consultar cada 3 segundos
+    // Limpieza del intervalo cuando el componente se desmonta o el wa_id cambia
+    return () => clearInterval(interval);
+    
+  }, [wa_id]);
+
 
 
 const handleFileUpload = async () => {
@@ -88,7 +87,7 @@ const handleFileUpload = async () => {
   try {
       const response = await subirArchivo(selectedFile);
       if (response.status === 201) {
-          console.log('Archivo subido correctamente');
+          //console.log('Archivo subido correctamente');
           // Aquí puedes manejar la lógica de éxito, por ejemplo mostrar un mensaje al usuario
       } else {
           console.error('Error al subir el archivo');
@@ -97,10 +96,6 @@ const handleFileUpload = async () => {
       console.error('Error en la solicitud:', error);
   }
 };
-
-  
-
-
 
   
  
@@ -137,7 +132,7 @@ const handleFileUpload = async () => {
           Authorization: `Bearer ${token}`,
         },
       });
-      console.log(response.data);
+      //console.log(response.data);
 
 
       const mensajeData = {
@@ -149,13 +144,13 @@ const handleFileUpload = async () => {
         waid: wa_id,
         estado: 'enviado',
       };
-      console.log("Datos de mensaje a enviar:", mensajeData);
+      //console.log("Datos de mensaje a enviar:", mensajeData);
       await guardarMensaje(mensajeData);
       toast.success("mensaje enviado");
       
-
-      guardarMensajeEnviado(mensajes, response.data.timestamp);
-      // Limpiar el input después de enviar el mensaje
+      // Actualizar mensajesUnidos para reflejar el nuevo mensaje enviado
+      setMensajesUnidos([...mensajesUnidos, mensajeData]);
+      
       setMensajes("");
     } catch (error) {
       console.error("Error enviando mensaje:", error);
@@ -260,7 +255,7 @@ const handleFileUpload = async () => {
 
       {/* Agrega la referencia al contenedor de mensajes */}
       <div className="chat-display-container" ref={chatDisplayRef}>
-      {mensajesUnidos.map((mensaje) => (
+      {mensajesUnidos.map((mensaje, index) => (
                 <ChatMensajes  key={mensaje.id} mensaje={mensaje} enviado={mensaje.estado === 'enviado'}/>
             ))}
         

@@ -59,7 +59,8 @@ class Usuario(AbstractBaseUser):
 
 
     class Meta:
-        db_table = 'Usuario'
+        # Especifica el esquema donde quieres crear la tabla
+        db_table = 'usuario'
 
 
     USERNAME_FIELD = 'username'

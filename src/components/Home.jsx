@@ -5,12 +5,12 @@ import './css/Home.css';
 
 
 
-export default function Home({ phoneNumber }) {
+export default function Home() {
   return (
     <div className="home">
       <div className="home-container">
         <Navegacio/>
-        <BarraLateral phoneNumber={phoneNumber}/>
+        <BarraLateral/>
         <div className="home-bg">
           <img src="../../public/img/sevenbrains.png" alt="Fondo" />
         </div>

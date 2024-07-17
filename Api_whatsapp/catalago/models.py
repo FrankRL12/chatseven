@@ -10,8 +10,9 @@ class EstadoMensaje(models.Model):
     editable = models.BooleanField(default=True, null=False)
 
     class Meta:
-        db_table = 'estadomensaje'
-
+        # Especifica el esquema donde quieres crear la tabla
+        db_table = 'estadoMensaje'
+      
 
 class TipoMensaje(models.Model):
     codigo = models.CharField(max_length=100, null=False)
@@ -22,7 +23,11 @@ class TipoMensaje(models.Model):
     editable = models.BooleanField(default=True, null=False)
 
     class Meta:
-        db_table = 'tipomensaje'
+        # Especifica el esquema donde quieres crear la tabla
+        db_table = 'tipoMensaje'
+        
+
+
 
     def __str__(self):
         return self.codigo
@@ -36,4 +41,6 @@ class Catalogo(models.Model):
     editable = models.BooleanField(default=True, null=False)
 
     class Meta:
-        db_table = 'catalogo'
+        # Especifica el esquema donde quieres crear la tabla
+        db_table = 'catalago'
+        

@@ -6,7 +6,6 @@ from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from datetime import datetime
 from catalago.models import TipoMensaje
 from contacto.models import Contacto
 import requests
@@ -19,6 +18,10 @@ from django.conf import settings
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django.core.files.storage import FileSystemStorage
+from datetime import datetime, timedelta
+from django.views import View
+from archivos. models import MultimediaFile
+
 
 # Create your views here.
 class MensajeViewset(viewsets.ModelViewSet):
@@ -69,71 +72,97 @@ class MensajeViewset(viewsets.ModelViewSet):
         return intercalados
 
 
+
+# The `WhatsAppWebhookAPIView` class defines a view in Django REST framework that fetches data from a
+# webhook URL at regular intervals and processes the received payload.
 class WhatsAppWebhookAPIView(APIView):
+    
+    # Método para obtener y procesar datos del webhook
     def fetch_data(self):
+        
+        # Bucle infinito para obtener datos periódicamente
         while True:
             try:
+                # URL del endpoint del webhook
                 url = 'https://seven-brains.com/api/whatsapp-integration-service/client-api/v1/webhook/event'
+                
+                # Parámetros para filtrar los datos por fecha y paginación
                 params = {
-                    'dateFrom': '2024-05-01',
-                    'dateTo': '2024-06-18',
-                    'from': 0,
-                    'size': 3300
+                    'dateFrom': '2024-05-01',  # Fecha de inicio para filtrar los eventos
+                    'dateTo': '2024-07-06',    # Fecha de fin para filtrar los eventos
+                    'from': 0,                 # Punto de partida para la paginación
+                    'size': 3900               # Tamaño del lote de datos a obtener
                 }
 
+                # Realiza la solicitud GET al webhook con los parámetros especificados
                 response = requests.get(url, params=params)
-
+                
+                # Verifica si la solicitud fue exitosa
                 if response.status_code != 200:
-                    print(f'Failed to fetch data from webhook. Status code: {
-                          response.status_code}')
-                    continue  # Intentar nuevamente en el próximo ciclo
+                    # Imprime un mensaje de error si la solicitud falla
+                    print(f'Failed to fetch data from webhook. Status code: {response.status_code}')
+                    continue  # Continua al siguiente ciclo del bucle para intentar nuevamente
 
+                # Obtiene el contenido JSON de la respuesta
                 payload = response.json()
-
+                
+                # Imprime el payload recibido en un formato legible
                 print("Payload recibido del webhook:")
                 print(json.dumps(payload, indent=4))
-
+                
+                # Verifica si el payload contiene la clave 'webhookEventItem'
                 if 'webhookEventItem' in payload:
+                    # Itera sobre cada elemento del evento en el payload
                     for event_item in payload['webhookEventItem']:
+                        # Convierte el payload del evento a un diccionario
                         entry = json.loads(event_item['payload'])
-                        messages = entry.get('entry', [])[0].get('changes', [])[
-                            0].get('value', {}).get('messages', [])
-                        contacts = entry.get('entry', [])[0].get('changes', [])[
-                            0].get('value', {}).get('contacts', [])
-
+                        
+                        # Extrae los mensajes del payload si existen
+                        messages = entry.get('entry', [])[0].get('changes', [])[0].get('value', {}).get('messages', [])
+                        # Extrae los contactos del payload si existen
+                        contacts = entry.get('entry', [])[0].get('changes', [])[0].get('value', {}).get('contacts', [])
+                        
+                        # Itera sobre cada mensaje en los mensajes extraídos
                         for message in messages:
+                            # Obtiene el ID de WhatsApp del remitente
                             wa_id = message.get('from')
+                            # Obtiene el texto del mensaje
                             text = message.get('text', {}).get('body', '')
+                            # Obtiene el ID del mensaje
                             message_id = message.get('id')
-
-                            # Verificar si el mensaje ya existe en la base de datos
+                            
+                            # Verifica si el mensaje ya existe en la base de datos
                             if not Mensaje.objects.filter(wanidmensaje=message_id).exists():
-
-                                # Guardar el mensaje en la base de datos con estado "recibido"
+                                # Si no existe, crea una nueva entrada en la base de datos
                                 Mensaje.objects.create(
-                                    textomensaje=text,
-                                    wanidmensaje=message_id,
-                                    json=json.dumps({
+                                    textomensaje=text,  # Guarda el texto del mensaje
+                                    wanidmensaje=message_id,  # Guarda el ID del mensaje
+                                    json=json.dumps({  # Guarda el mensaje completo y los contactos en formato JSON
                                         'message': message,
                                         'contacts': contacts
                                     }),
-                                    estado="recibido"
+                                    estado="recibido"  # Marca el estado del mensaje como "recibido"
                                 )
 
-                # Esperar 2 segundos antes de la próxima solicitud
+                # Espera 2 segundos antes de realizar la próxima solicitud
                 time.sleep(2)
 
             except Exception as e:
+                # Imprime el error si ocurre una excepción
                 print(f'Error al procesar la solicitud: {str(e)}')
-                # Esperar 2 segundos en caso de error para evitar sobrecargar el servidor
+                # Espera 2 segundos antes de intentar nuevamente para evitar sobrecargar el servidor
                 time.sleep(2)
 
+    # Método GET para iniciar la obtención de datos en un hilo separado
     def get(self, request, *args, **kwargs):
-        # Iniciar la función fetch_data en un hilo separado
+        # Crea un nuevo hilo que ejecutará la función fetch_data
         thread = threading.Thread(target=self.fetch_data)
+        # Inicia el hilo
         thread.start()
 
-        return Response({'message': 'Fetching data from webhook every 2 seconds'}, status=status.HTTP_200_OK)
+        # Retorna una respuesta indicando que la obtención de datos ha comenzado
+        return Response({'message': 'Obteniendo datos del webhook cada 2 segundos'}, status=status.HTTP_200_OK)
+
 
 
 class GuardarMensajeAPI(APIView):
@@ -203,6 +232,64 @@ class GuardarMensajeAPI(APIView):
 #    
 #    except Exception as e:
 #        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+# Función para crear el JSON dinámico
+
+def crear_json_archivos(archivos):
+    json_archivos = []
+
+    for archivo in archivos:
+        extension = os.path.splitext(archivo)[1].lower()
+        nombre = os.path.basename(archivo)
+        archivo_info = {
+            "link": archivo,
+            "caption": f"Archivo en formato {extension[1:].upper()}",
+        }
+
+        if extension in [".jpg", ".jpeg", ".png"]:
+            json_archivos.append({
+                "messaging_product": "whatsapp",
+                "recipient_type": "individual",
+                "to": "9321021228",
+                "type": "image",
+                "image": archivo_info
+            })
+        elif extension == ".pdf":
+            json_archivos.append({
+                "messaging_product": "whatsapp",
+                "recipient_type": "individual",
+                "to": "9321021228",
+                "type": "document",
+                "document": {
+                    "link": archivo,
+                    "filename": nombre,
+                    "caption": archivo_info["caption"]
+                }
+            })
+        elif extension in [".mp4", ".avi", ".mov"]:
+            json_archivos.append({
+                "messaging_product": "whatsapp",
+                "recipient_type": "individual",
+                "to": "9321021228",
+                "type": "video",
+                "video": archivo_info
+            })
+        else:
+            json_archivos.append({
+                "messaging_product": "whatsapp",
+                "recipient_type": "individual",
+                "to": "9321021228",
+                "type": "file",
+                "file": {
+                    "link": archivo,
+                    "caption": archivo_info["caption"]
+                }
+            })
+
+    return json_archivos
+
+
+
+    
 
 @api_view(['GET', 'POST'])
 def subir_archivo(request):
@@ -222,7 +309,9 @@ def subir_archivo(request):
 
             archivo_url = f"http://127.0.0.1:8000/temporal/{filename}"
 
-            return Response({'mensaje': 'Archivo subido correctamente', 'url': archivo_url}, status=status.HTTP_201_CREATED)
+            json_resultado = crear_json_archivos([archivo_url])
+
+            return Response(json_resultado, status=status.HTTP_201_CREATED)
 
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -237,7 +326,9 @@ def subir_archivo(request):
                 f"http://127.0.0.1:8000/temporal/{archivo}" for archivo in archivos
             ]
 
-            return Response({'archivos': archivo_urls}, status=status.HTTP_200_OK)
+            json_resultado = crear_json_archivos(archivo_urls)
+
+            return Response(json_resultado, status=status.HTTP_200_OK)
 
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

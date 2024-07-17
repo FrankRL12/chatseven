@@ -12,6 +12,10 @@ from .serializers import ArchivosSerializer, MessageSerializer
 from rest_framework import viewsets
 from django.conf import settings
 from rest_framework.decorators import action
+from threading import Thread
+from datetime import datetime, timedelta
+import time
+import threading
 
 
 
@@ -97,113 +101,94 @@ class CombinedDataAPIView(APIView):
 
 
 class MultimediaDataAPIView(APIView):
-    def get(self, request, *args, **kwargs):
-        # Realizar la petición al webhook para obtener el JSON completo
-        webhook_url = settings.WEBHOOK_BASE_URL
-        token = settings.TOKEN_ACESSO_FACEBOOK
-        facebook_api = settings.FACEBOOK_API_BASE_URL
-
-        webhook_event_url = f"{webhook_url}webhook/event"
-
-        params = {
-            'dateFrom': '2024-05-01',
-            'dateTo': '2024-06-19',
-            'from': 0,
-            'size': 3300
-        }
-
-        
-        headers = {
-            'Authorization': f'Bearer {token}'
-        }
-
-        response = requests.get(webhook_event_url, params=params, headers=headers)
-        
-        if response.status_code != 200:
-            return Response({'error': 'Failed to fetch data from webhook'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Obtener el JSON completo devuelto por el webhook
-        webhook_json = response.json()
-
-        # Lista para almacenar las URLs de los archivos multimedia
-        multimedia_urls = []
-
-        # Analizar el JSON para extraer las IDs de los archivos multimedia
-        for event in webhook_json.get('webhookEventItem', []):
-            payload = event.get('payload')
-            payload_dict = json.loads(payload)
-            entries = payload_dict.get('entry', [])
-            for entry in entries:
-                changes = entry.get('changes', [])
-                for change in changes:
-                    value = change.get('value', {})
-                    messages = value.get('messages', [])
-                    for message in messages:
-                        if 'type' in message and message['type'] in ['image', 'sticker', 'video', 'audio', 'document']:
-                            multimedia_id = message.get(message['type'], {}).get('id')
-                            if multimedia_id:
-                                # Concatenar la ID de multimedia a la URL
-                                url = f"{facebook_api}/{multimedia_id}"
-                                multimedia_response = requests.get(url, headers=headers)
-                                if multimedia_response.status_code == 200:
-                                    multimedia_data = multimedia_response.json()
-                                    # Obtener la URL de descarga del archivo multimedia
-                                    multimedia_url = multimedia_data.get('url')
-                                    if multimedia_url:
-                                        multimedia_urls.append((multimedia_id, multimedia_url))
-                                        # Imprimir la URL en la consola
-                                        print(f"URL del archivo multimedia: {multimedia_url}")
-
-        # Lista para almacenar los nombres de los archivos multimedia guardados
-        saved_files = []
-        
-        # Descargar y guardar cada archivo multimedia localmente y actualizar la base de datos
-        for multimedia_id, multimedia_url in multimedia_urls:
+    
+    def fetch_data(self):
+        while True:
             try:
-                # Realizar la solicitud GET para obtener los datos binarios del archivo multimedia
-                response = requests.get(multimedia_url, headers=headers)
-                
-                # Obtener el tipo MIME del archivo multimedia
-                mime_type = response.headers.get('Content-Type')
-                
-                # Extensión del archivo basada en el tipo MIME
-                extension = mime_type.split('/')[-1] if mime_type else 'unknown'
-                
-                # Nombre del archivo: archivo_multimedia_id.extension
-                filename = f"{multimedia_id}.{extension}"
-                
-                # Guardar los datos binarios en un archivo local
-                file_path = default_storage.save(filename, ContentFile(response.content))
-                
-                # Intentar obtener el objeto MultimediaFile existente
-                try:
-                    multimedia_file = MultimediaFile.objects.get(multimedia_id=multimedia_id)
-                    # Si el objeto existe, actualiza los campos url y archivos
-                    multimedia_file.url = multimedia_url
-                    multimedia_file.archivos = filename  # Guardar solo el nombre del archivo
-                    multimedia_file.save()
-                    saved_files.append(filename)
-                except MultimediaFile.DoesNotExist:
-                    # Si el objeto no existe, crea uno nuevo
-                    multimedia_file = MultimediaFile.objects.create(
-                        multimedia_id=multimedia_id,
-                        url=multimedia_url,
-                        archivos=filename
-                    )
-                    saved_files.append(filename)
+                webhook_url = settings.WEBHOOK_BASE_URL
+                token = settings.TOKEN_ACESSO_FACEBOOK
+                facebook_api = settings.FACEBOOK_API_BASE_URL
 
-                # Imprimir la ruta del archivo guardado en la consola
-                print(f"Archivo multimedia guardado: {filename}")
-                
+                webhook_event_url = f"{webhook_url}webhook/event"
+
+                params = {
+                    'dateFrom': '2024-05-01',
+                    'dateTo': '2024-06-24',
+                    'from': 0,
+                    'size': 3400
+                }
+
+                headers = {
+                    'Authorization': f'Bearer {token}'
+                }
+
+                response = requests.get(webhook_event_url, params=params, headers=headers)
+
+                if response.status_code != 200:
+                    print(f'Failed to fetch data from webhook. Status code: {response.status_code}')
+                    continue  # Continúa al siguiente ciclo si hay un error
+
+                webhook_json = response.json()
+                multimedia_urls = []
+
+                for event in webhook_json.get('webhookEventItem', []):
+                    payload = event.get('payload')
+                    payload_dict = json.loads(payload)
+                    entries = payload_dict.get('entry', [])
+                    for entry in entries:
+                        changes = entry.get('changes', [])
+                        for change in changes:
+                            value = change.get('value', {})
+                            messages = value.get('messages', [])
+                            for message in messages:
+                                if 'type' in message and message['type'] in ['image', 'sticker', 'video', 'audio', 'document']:
+                                    multimedia_id = message.get(message['type'], {}).get('id')
+                                    if multimedia_id:
+                                        # Verifica si el archivo ya está en la base de datos
+                                        if not MultimediaFile.objects.filter(multimedia_id=multimedia_id).exists():
+                                            url = f"{facebook_api}/{multimedia_id}"
+                                            multimedia_response = requests.get(url, headers=headers)
+                                            if multimedia_response.status_code == 200:
+                                                multimedia_data = multimedia_response.json()
+                                                multimedia_url = multimedia_data.get('url')
+                                                if multimedia_url:
+                                                    multimedia_urls.append((multimedia_id, multimedia_url))
+                                        else:
+                                            print(f"Archivo multimedia {multimedia_id} ya existe en la base de datos. Omite la descarga.")
+
+                saved_files = []
+
+                for multimedia_id, multimedia_url in multimedia_urls:
+                    try:
+                        response = requests.get(multimedia_url, headers=headers)
+                        mime_type = response.headers.get('Content-Type')
+                        extension = mime_type.split('/')[-1] if mime_type else 'unknown'
+                        filename = f"{multimedia_id}.{extension}"
+                        file_path = default_storage.save(filename, ContentFile(response.content))
+                        MultimediaFile.objects.update_or_create(
+                            multimedia_id=multimedia_id,
+                            defaults={
+                                'url': multimedia_url,
+                                'archivos': filename
+                            }
+                        )
+                        saved_files.append(filename)
+                        print(f"Archivo multimedia guardado: {filename}")
+
+                    except Exception as e:
+                        print(f"Error al descargar/guardar el archivo: {str(e)}")
+
+                time.sleep(3)  # Espera 3 segundos antes de realizar la próxima solicitud
+
             except Exception as e:
-                # Manejar cualquier error que ocurra durante la descarga o guardado
-                print(f"Error al descargar/guardar el archivo: {str(e)}")
+                print(f'Error al procesar la solicitud: {str(e)}')
+                time.sleep(3)  # Espera 3 segundos antes de intentar nuevamente en caso de error
 
-        # Devolver la lista de nombres de archivos multimedia guardados como una respuesta de API
-        return Response({'archivos_actualizados': saved_files}, status=status.HTTP_200_OK)
-
-
-
+    def get(self, request, *args, **kwargs):
+        thread = threading.Thread(target=self.fetch_data)
+        thread.start()
+        return Response({'message': 'Fetching data from webhook every 3 seconds'}, status=status.HTTP_200_OK)
+        
 class ArchivosViewset(viewsets.ModelViewSet):
     serializer_class = ArchivosSerializer
     queryset = MultimediaFile.objects.all()

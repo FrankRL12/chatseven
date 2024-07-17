@@ -19,36 +19,24 @@ export default function BarraLateral({ posicion, phoneNumber }) {
     setShowModal(false);
   };
 
-  useEffect(() => {
-    const fetchContactos = async () => {
-      try {
-        const res = await getAllMesajes(); // Llamar a tu función API para obtener los contactos
-        setContactos(res.data.webhookEventItem); // Establecer los contactos en el estado
-      } catch (error) {
-        console.error("Error al obtener los contactos:", error);
-      }
-    };
+  const fetchContactos = async () => {
+    try {
+      const res = await getAllMesajes();
+      setContactos(res.data.webhookEventItem);
+    } catch (error) {
+      console.error("Error al obtener los contactos:", error);
+    }
+  };
 
-    fetchContactos();
-  }, []);
-
+  
   useEffect(() => {
     const fetchContactosInterval = setInterval(() => {
-      //fetchContactos();
+      fetchContactos();
     }, 1000); // Llama a fetchContactos cada 1 segundos
-
-    return () => clearInterval(fetchContactosInterval); // Limpia el intervalo al desmontar el componente
+    // Limpia el intervalo al desmontar el componente
+    return () => clearInterval(fetchContactosInterval); 
   }, []);
 
-  useEffect(() => {
-    const socket = new WebSocket("ws://localhost:8080"); // Reemplaza con la URL de tu WebSocket
-    socket.onmessage = (event) => {
-      // Se ejecuta cuando se recibe un mensaje del WebSocket
-      //fetchContactos(); // Vuelve a cargar los contactos
-    };
-
-    return () => socket.close(); // Cierra la conexión al desmontar el componente
-  }, []);
 
   function mostrarUltimoMensajeDesdePosicion(mensajes, posicion) {
     if (!mensajes || mensajes.length === 0) {

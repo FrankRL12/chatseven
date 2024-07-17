@@ -9,6 +9,8 @@ const ChatMensajes = ({ mensaje, enviado }) => {
   // Función para formatear la hora en formato HH:MM AM/PM
   const formatHour = (timestampString) => {
     const date = new Date(timestampString);
+
+    
     const hours = date.getHours();
     const minutes = date.getMinutes();
     const ampm = hours >= 12 ? 'pm' : 'am';

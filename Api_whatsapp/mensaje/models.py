@@ -17,4 +17,5 @@ class Mensaje(models.Model):
     estado = models.CharField(max_length=10, null=True, blank=True) 
     
     class Meta:
+        # Especifica el esquema donde quieres crear la tabla
         db_table = 'mensaje'

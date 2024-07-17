@@ -15,4 +15,5 @@ class Bitacora(models.Model):
     fecharegistro = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        # Especifica el esquema donde quieres crear la tabla
         db_table = 'bitacora'
