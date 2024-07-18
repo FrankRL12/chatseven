@@ -14,8 +14,11 @@ from django.conf import settings
 from rest_framework.decorators import action
 from threading import Thread
 from datetime import datetime, timedelta
+from django.db import OperationalError, connection
 import time
 import threading
+import subprocess
+
 
 
 
@@ -101,94 +104,177 @@ class CombinedDataAPIView(APIView):
 
 
 class MultimediaDataAPIView(APIView):
-    
+
+    def check_database_ready(self):
+        """
+        Verifica si la base de datos está lista y sincronizada.
+        """
+        try:
+            # Realiza una consulta simple para verificar la conexión
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT 1")
+            return True
+        except OperationalError:
+            return False
+
     def fetch_data(self):
-        while True:
-            try:
-                webhook_url = settings.WEBHOOK_BASE_URL
-                token = settings.TOKEN_ACESSO_FACEBOOK
-                facebook_api = settings.FACEBOOK_API_BASE_URL
+        try:
+            if not self.check_database_ready():
+                message = 'La base de datos no está lista. Inténtelo de nuevo más tarde.'
+                return JsonResponse({'message': message}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-                webhook_event_url = f"{webhook_url}webhook/event"
+            webhook_url = settings.WEBHOOK_BASE_URL
+            token = settings.TOKEN_ACESSO_FACEBOOK
+            facebook_api = settings.FACEBOOK_API_BASE_URL
 
-                params = {
-                    'dateFrom': '2024-05-01',
-                    'dateTo': '2024-06-24',
-                    'from': 0,
-                    'size': 3400
-                }
+            webhook_event_url = f"{webhook_url}webhook/event"
 
-                headers = {
-                    'Authorization': f'Bearer {token}'
-                }
+            params = {
+                'dateFrom': '2024-05-01',  # Fecha de inicio para filtrar los eventos
+                'dateTo': self.get_current_date(),  # Fecha de fin para filtrar los eventos, dinámica
+                'from': 0,  # Punto de partida para la paginación
+                'size': self.calculate_size()  # Tamaño del lote de datos a obtener, dinámico
+            }
 
-                response = requests.get(webhook_event_url, params=params, headers=headers)
+            headers = {
+                'Authorization': f'Bearer {token}'
+            }
 
-                if response.status_code != 200:
-                    print(f'Failed to fetch data from webhook. Status code: {response.status_code}')
-                    continue  # Continúa al siguiente ciclo si hay un error
+            response = requests.get(webhook_event_url, params=params, headers=headers)
 
-                webhook_json = response.json()
-                multimedia_urls = []
+            if response.status_code != 200:
+                message = f'Failed to fetch data from webhook. Status code: {response.status_code}'
+                return JsonResponse({'message': message}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-                for event in webhook_json.get('webhookEventItem', []):
-                    payload = event.get('payload')
-                    payload_dict = json.loads(payload)
-                    entries = payload_dict.get('entry', [])
-                    for entry in entries:
-                        changes = entry.get('changes', [])
-                        for change in changes:
-                            value = change.get('value', {})
-                            messages = value.get('messages', [])
-                            for message in messages:
-                                if 'type' in message and message['type'] in ['image', 'sticker', 'video', 'audio', 'document']:
-                                    multimedia_id = message.get(message['type'], {}).get('id')
-                                    if multimedia_id:
-                                        # Verifica si el archivo ya está en la base de datos
-                                        if not MultimediaFile.objects.filter(multimedia_id=multimedia_id).exists():
-                                            url = f"{facebook_api}/{multimedia_id}"
-                                            multimedia_response = requests.get(url, headers=headers)
-                                            if multimedia_response.status_code == 200:
-                                                multimedia_data = multimedia_response.json()
-                                                multimedia_url = multimedia_data.get('url')
-                                                if multimedia_url:
-                                                    multimedia_urls.append((multimedia_id, multimedia_url))
-                                        else:
-                                            print(f"Archivo multimedia {multimedia_id} ya existe en la base de datos. Omite la descarga.")
+            webhook_json = response.json()
+            multimedia_urls = []
 
-                saved_files = []
+            for event in webhook_json.get('webhookEventItem', []):
+                payload = event.get('payload')
+                payload_dict = json.loads(payload)
+                entries = payload_dict.get('entry', [])
+                for entry in entries:
+                    changes = entry.get('changes', [])
+                    for change in changes:
+                        value = change.get('value', {})
+                        messages = value.get('messages', [])
+                        for message in messages:
+                            if 'type' in message and message['type'] in ['image', 'sticker', 'video', 'audio', 'document']:
+                                multimedia_id = message.get(message['type'], {}).get('id')
+                                if multimedia_id:
+                                    # Verifica si el archivo ya está en la base de datos
+                                    if not MultimediaFile.objects.filter(multimedia_id=multimedia_id).exists():
+                                        url = f"{facebook_api}/{multimedia_id}"
+                                        multimedia_response = requests.get(url, headers=headers)
+                                        if multimedia_response.status_code == 200:
+                                            multimedia_data = multimedia_response.json()
+                                            multimedia_url = multimedia_data.get('url')
+                                            if multimedia_url:
+                                                multimedia_urls.append((multimedia_id, multimedia_url))
+                                                print(f"URL del archivo multimedia: {multimedia_url}")
+                                    else:
+                                        print(f"Archivo multimedia {multimedia_id} ya existe en la base de datos. Omite la descarga.")
 
-                for multimedia_id, multimedia_url in multimedia_urls:
-                    try:
-                        response = requests.get(multimedia_url, headers=headers)
-                        mime_type = response.headers.get('Content-Type')
-                        extension = mime_type.split('/')[-1] if mime_type else 'unknown'
-                        filename = f"{multimedia_id}.{extension}"
-                        file_path = default_storage.save(filename, ContentFile(response.content))
-                        MultimediaFile.objects.update_or_create(
-                            multimedia_id=multimedia_id,
-                            defaults={
-                                'url': multimedia_url,
-                                'archivos': filename
-                            }
-                        )
-                        saved_files.append(filename)
-                        print(f"Archivo multimedia guardado: {filename}")
+            saved_files = []
 
-                    except Exception as e:
-                        print(f"Error al descargar/guardar el archivo: {str(e)}")
+            for multimedia_id, multimedia_url in multimedia_urls:
+                try:
+                    response = requests.get(multimedia_url, headers=headers)
+                    mime_type = response.headers.get('Content-Type')
+                    extension = mime_type.split('/')[-1] if mime_type else 'unknown'
+                    filename = f"{multimedia_id}.{extension}"
+                    file_path = default_storage.save(filename, ContentFile(response.content))
+                    MultimediaFile.objects.update_or_create(
+                        multimedia_id=multimedia_id,
+                        defaults={
+                            'url': multimedia_url,
+                            'archivos': filename
+                        }
+                    )
+                    saved_files.append(filename)
+                    print(f"Archivo multimedia guardado: {filename}")
 
-                time.sleep(3)  # Espera 3 segundos antes de realizar la próxima solicitud
+                except Exception as e:
+                    print(f"Error al descargar/guardar el archivo: {str(e)}")
 
-            except Exception as e:
-                print(f'Error al procesar la solicitud: {str(e)}')
-                time.sleep(3)  # Espera 3 segundos antes de intentar nuevamente en caso de error
+            return Response({'message': 'Datos obtenidos correctamente', 'files': saved_files}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            message = f'Error al procesar la solicitud: {str(e)}'
+            return Response({'message': message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def get(self, request, *args, **kwargs):
-        thread = threading.Thread(target=self.fetch_data)
-        thread.start()
-        return Response({'message': 'Fetching data from webhook every 3 seconds'}, status=status.HTTP_200_OK)
+        return self.fetch_data()
+
+    # Método para obtener la fecha actual dinámica
+    def get_current_date(self):
+        current_time = datetime.now()
+        if current_time.hour >= 18:
+            current_time += timedelta(days=1)
+        return current_time.strftime('%Y-%m-%d')
+
+    # Método para calcular el tamaño dinámico
+    def calculate_size(self):
+        start_date = datetime(2024, 7, 12)  # Fecha de inicio
+        current_date = datetime.now()
+        days_diff = (current_date - start_date).days
+        base_size = 4300
+        increment_per_day = 150
+        size = base_size + (days_diff * increment_per_day)
+        return size
+
+
+
+# Función para hacer la petición HTTP
+# Función para hacer la petición HTTP
+def hacer_peticion(url):
+    try:
+        response = requests.get(url)
+        if response.status_code == 200:
+            print(f"Peticion a {url} exitosa")
+        else:
+            print(f"Error al hacer la petición a {url}: {response.status_code}")
+    except Exception as e:
+        print(f"Error al hacer la petición a {url}: {str(e)}")
+
+# Función para hacer la petición HTTP de combined-data de forma asíncrona
+def hacer_peticion_combined_data():
+    url = "http://127.0.0.1:8000/api/combined-data/"
+    try:
+        response = requests.get(url)
+        if response.status_code == 200:
+            print(f"Peticion a {url} exitosa")
+        else:
+            print(f"Error al hacer la petición a {url}: {response.status_code}")
+    except Exception as e:
+        print(f"Error al hacer la petición a {url}: {str(e)}")
+
+# Función para ejecutar las peticiones continuamente
+def ejecutar_peticiones():
+    urls = [
+        "http://127.0.0.1:8000/api/webhook/"
+    ]
+    while True:
+        threads = []
+        for url in urls:
+            thread = threading.Thread(target=hacer_peticion, args=(url,))
+            thread.start()
+            threads.append(thread)
         
+        # Ejecutar combined-data en un hilo separado
+        thread_combined_data = threading.Thread(target=hacer_peticion_combined_data)
+        thread_combined_data.start()
+        threads.append(thread_combined_data)
+        
+        for thread in threads:
+            thread.join()  # Espera a que todos los hilos terminen antes de continuar
+
+        time.sleep(2)  # Espera 6 segundos antes de volver a ejecutar las peticiones
+
+# Iniciar el hilo para ejecutar las peticiones
+thread = threading.Thread(target=ejecutar_peticiones)
+thread.start()
+
 class ArchivosViewset(viewsets.ModelViewSet):
     serializer_class = ArchivosSerializer
     queryset = MultimediaFile.objects.all()

@@ -21,6 +21,7 @@ from django.core.files.storage import FileSystemStorage
 from datetime import datetime, timedelta
 from django.views import View
 from archivos. models import MultimediaFile
+from django.db import OperationalError, connection
 
 
 # Create your views here.
@@ -76,22 +77,36 @@ class MensajeViewset(viewsets.ModelViewSet):
 # The `WhatsAppWebhookAPIView` class defines a view in Django REST framework that fetches data from a
 # webhook URL at regular intervals and processes the received payload.
 class WhatsAppWebhookAPIView(APIView):
-    
+
+    def check_database_ready(self):
+        """
+        Verifica si la base de datos está lista y sincronizada.
+        """
+        try:
+            # Realiza una consulta simple para verificar la conexión
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT 1")
+            return True
+        except OperationalError:
+            return False
+
     # Método para obtener y procesar datos del webhook
     def fetch_data(self):
-        
         # Bucle infinito para obtener datos periódicamente
-        while True:
             try:
+                if not self.check_database_ready():
+                    message = 'La base de datos no está lista. Inténtelo de nuevo más tarde.'
+                    return JsonResponse({'message': message}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+                
                 # URL del endpoint del webhook
                 url = 'https://seven-brains.com/api/whatsapp-integration-service/client-api/v1/webhook/event'
                 
                 # Parámetros para filtrar los datos por fecha y paginación
                 params = {
                     'dateFrom': '2024-05-01',  # Fecha de inicio para filtrar los eventos
-                    'dateTo': '2024-07-06',    # Fecha de fin para filtrar los eventos
-                    'from': 0,                 # Punto de partida para la paginación
-                    'size': 3900               # Tamaño del lote de datos a obtener
+                    'dateTo': self.get_current_date(),  # Fecha de fin para filtrar los eventos, dinámica
+                    'from': 0,  # Punto de partida para la paginación
+                    'size': self.calculate_size()  # Tamaño del lote de datos a obtener, dinámico
                 }
 
                 # Realiza la solicitud GET al webhook con los parámetros especificados
@@ -101,7 +116,7 @@ class WhatsAppWebhookAPIView(APIView):
                 if response.status_code != 200:
                     # Imprime un mensaje de error si la solicitud falla
                     print(f'Failed to fetch data from webhook. Status code: {response.status_code}')
-                    continue  # Continua al siguiente ciclo del bucle para intentar nuevamente
+                    # Continua al siguiente ciclo del bucle para intentar nuevamente
 
                 # Obtiene el contenido JSON de la respuesta
                 payload = response.json()
@@ -144,14 +159,11 @@ class WhatsAppWebhookAPIView(APIView):
                                     estado="recibido"  # Marca el estado del mensaje como "recibido"
                                 )
 
-                # Espera 2 segundos antes de realizar la próxima solicitud
-                time.sleep(2)
-
             except Exception as e:
                 # Imprime el error si ocurre una excepción
                 print(f'Error al procesar la solicitud: {str(e)}')
                 # Espera 2 segundos antes de intentar nuevamente para evitar sobrecargar el servidor
-                time.sleep(2)
+    
 
     # Método GET para iniciar la obtención de datos en un hilo separado
     def get(self, request, *args, **kwargs):
@@ -163,6 +175,22 @@ class WhatsAppWebhookAPIView(APIView):
         # Retorna una respuesta indicando que la obtención de datos ha comenzado
         return Response({'message': 'Obteniendo datos del webhook cada 2 segundos'}, status=status.HTTP_200_OK)
 
+    # Método para obtener la fecha actual dinámica
+    def get_current_date(self):
+        current_time = datetime.now()
+        if current_time.hour >= 18:
+            current_time += timedelta(days=1)
+        return current_time.strftime('%Y-%m-%d')
+
+    # Método para calcular el tamaño dinámico
+    def calculate_size(self):
+        start_date = datetime(2024, 7, 12)  # Fecha de inicio
+        current_date = datetime.now()
+        days_diff = (current_date - start_date).days
+        base_size = 4300
+        increment_per_day = 150
+        size = base_size + (days_diff * increment_per_day)
+        return size
 
 
 class GuardarMensajeAPI(APIView):
@@ -216,6 +244,8 @@ class GuardarMensajeAPI(APIView):
                 return Response({'error': 'Error al enviar el mensaje a la API de Facebook'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 
 
 #@api_view(['POST'])
@@ -289,7 +319,6 @@ def crear_json_archivos(archivos):
 
 
 
-    
 
 @api_view(['GET', 'POST'])
 def subir_archivo(request):
